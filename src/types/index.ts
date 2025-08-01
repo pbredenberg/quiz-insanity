@@ -3,6 +3,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  description?: string;  // New field with 250 char limit (optional)
+  interests?: string[];   // New field for storing user interests as tags
   preferences: {
     theme: 'dark' | 'light';
     notifications: boolean;

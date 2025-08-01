@@ -23,8 +23,10 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.11",
+    "@types/md5": "^2.3.5",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
+    "md5": "^2.3.0",
     "netlify-cli": "23.0.0",
     "npm-run-all2": "8.0.4",
     "prettier": "3.6.2",
