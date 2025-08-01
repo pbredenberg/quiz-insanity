@@ -95,9 +95,10 @@ export const handler: Handler = async (event) => {
 
     // Fetch website content with reduced timeout for production
     const response = await axios.get(url, {
-      timeout: 25000,
+      timeout: 30000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; QuizInsanity/1.0)',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
       maxRedirects: 3, // Limit redirects
       maxContentLength: 1024 * 1024, // 1MB limit
