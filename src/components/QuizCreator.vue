@@ -163,7 +163,7 @@
               Quiz Created Successfully!
             </h3>
             <p class="text-green-300 text-sm">
-              Your quiz has been generated and saved.
+              Your quiz has been generated and saved. Redirecting to quiz...
             </p>
           </div>
         </div>
@@ -174,10 +174,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useQuizzesStore } from '../stores/quizzes';
 import { ApiService } from '../services/api';
 import type { Quiz } from '../types';
 
+const router = useRouter();
 const quizzesStore = useQuizzesStore();
 
 const form = ref({
@@ -236,10 +238,13 @@ const handleSubmit = async () => {
       description: '',
     };
 
-    // Hide success message after 3 seconds
+    // Redirect to quiz page after 2 seconds
     setTimeout(() => {
       showSuccess.value = false;
-    }, 3000);
+      // Start the quiz and navigate to the quiz page
+      quizzesStore.startQuizAttempt(quiz.id);
+      router.push('/quizzes');
+    }, 2000);
   } catch (error) {
     console.error('Error creating quiz:', error);
     quizzesStore.error = 'An unexpected error occurred. Please try again.';
