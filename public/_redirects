@@ -1,0 +1,5 @@
+# Handle client-side routing for Vue Router
+/*    /index.html   200
+
+# API redirects (already handled in netlify.toml but keeping for clarity)
+/api/*  /.netlify/functions/:splat  200
