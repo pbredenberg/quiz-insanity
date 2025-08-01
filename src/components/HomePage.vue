@@ -54,17 +54,71 @@
         <div
           v-for="quiz in recentQuizzes"
           :key="quiz.id"
-          class="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer"
-          @click="startQuiz(quiz.id)"
+          class="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors relative group"
         >
-          <h3 class="text-lg font-semibold text-white mb-2">
-            {{ quiz.title }}
-          </h3>
-          <p class="text-gray-300 text-sm mb-3">{{ quiz.description }}</p>
-          <div class="flex justify-between items-center text-xs text-gray-400">
-            <span>{{ quiz.questions.length }} questions</span>
-            <span>{{ formatDate(quiz.createdAt) }}</span>
+          <!-- Delete Button -->
+          <button
+            @click.stop="showDeleteConfirmation(quiz)"
+            class="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            title="Delete quiz"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Quiz Card Content -->
+          <div
+            class="cursor-pointer"
+            @click="startQuiz(quiz.id)"
+          >
+            <h3 class="text-lg font-semibold text-white mb-2">
+              {{ quiz.title }}
+            </h3>
+            <p class="text-gray-300 text-sm mb-3">{{ quiz.description }}</p>
+            <div class="flex justify-between items-center text-xs text-gray-400">
+              <span>{{ quiz.questions.length }} questions</span>
+              <span>{{ formatDate(quiz.createdAt) }}</span>
+            </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <div
+      v-if="showDeleteDialog"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="cancelDelete"
+    >
+      <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-white mb-4">Delete Quiz</h3>
+        <p class="text-gray-300 mb-6">
+          Are you sure you want to delete "{{ quizToDelete?.title }}"? This action cannot be undone.
+        </p>
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="cancelDelete"
+            class="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDelete"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </div>
     </div>
@@ -175,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useQuizzesStore } from '../stores/quizzes';
 import { useUserProfileStore } from '../stores/userProfile';
 
@@ -197,5 +251,25 @@ const startQuiz = (quizId: string) => {
 
 const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString();
+};
+
+// Delete functionality
+const showDeleteDialog = ref(false);
+const quizToDelete = ref(null);
+
+const showDeleteConfirmation = (quiz: any) => {
+  quizToDelete.value = quiz;
+  showDeleteDialog.value = true;
+};
+
+const cancelDelete = () => {
+  showDeleteDialog.value = false;
+  quizToDelete.value = null;
+};
+
+const confirmDelete = () => {
+  quizzesStore.removeQuiz(quizToDelete.value.id);
+  showDeleteDialog.value = false;
+  quizToDelete.value = null;
 };
 </script>

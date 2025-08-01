@@ -36,27 +36,53 @@
         <div
           v-for="quiz in quizzesStore.quizzes"
           :key="quiz.id"
-          class="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors cursor-pointer"
-          @click="startQuiz(quiz.id)"
+          class="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors relative group"
         >
-          <h3 class="text-lg font-semibold text-white mb-2">
-            {{ quiz.title }}
-          </h3>
-          <p class="text-gray-300 text-sm mb-3">{{ quiz.description }}</p>
-          <div class="flex justify-between items-center text-xs text-gray-400 mb-2">
-            <span>{{ quiz.questions.length }} questions</span>
-            <span>{{ formatDate(quiz.createdAt) }}</span>
-          </div>
-          <div class="flex justify-between items-center mt-2">
-            <div v-if="userProfileStore.isLoggedIn" class="text-xs bg-gray-800 rounded p-2 text-blue-400">
-              <span class="font-medium">Best Score:</span> {{ getBestScoreForQuiz(quiz.id) }}
-            </div>
-            <button
-              @click.stop="editQuiz(quiz.id)"
-              class="text-xs bg-blue-600 hover:bg-blue-700 text-white rounded p-2 transition-colors"
+          <!-- Delete Button -->
+          <button
+            @click.stop="showDeleteConfirmation(quiz)"
+            class="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            title="Delete quiz"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Edit
-            </button>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Quiz Card Content -->
+          <div
+            class="cursor-pointer"
+            @click="startQuiz(quiz.id)"
+          >
+            <h3 class="text-lg font-semibold text-white mb-2">
+              {{ quiz.title }}
+            </h3>
+            <p class="text-gray-300 text-sm mb-3">{{ quiz.description }}</p>
+            <div class="flex justify-between items-center text-xs text-gray-400 mb-2">
+              <span>{{ quiz.questions.length }} questions</span>
+              <span>{{ formatDate(quiz.createdAt) }}</span>
+            </div>
+            <div class="flex justify-between items-center mt-2">
+              <div v-if="userProfileStore.isLoggedIn" class="text-xs bg-gray-800 rounded p-2 text-blue-400">
+                <span class="font-medium">Best Score:</span> {{ getBestScoreForQuiz(quiz.id) }}
+              </div>
+              <button
+                @click.stop="editQuiz(quiz.id)"
+                class="text-xs bg-blue-600 hover:bg-blue-700 text-white rounded p-2 transition-colors"
+              >
+                Edit
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -95,19 +121,29 @@
             >Question {{ currentQuestionIndex + 1 }} of
             {{ quizzesStore.currentQuizQuestions.length }}</span
           >
-          <span>Score: {{ quizzesStore.currentQuizScore }}</span>
+          <div class="flex items-center space-x-4">
+            <span>Score: {{ quizzesStore.currentQuizScore }}</span>
+            <span v-if="userProfileStore.isLoggedIn && getCurrentBestScore()" class="text-blue-400">
+              Best: {{ getCurrentBestScore() }}
+            </span>
+          </div>
         </div>
 
-        <!-- Progress Bar -->
-        <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+        <div class="w-full bg-gray-700 rounded-full h-2 mt-4">
           <div
             class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            :style="{ width: `${quizzesStore.currentQuizProgress}%` }"
+            :style="{
+              width: `${
+                ((currentQuestionIndex + 1) /
+                  quizzesStore.currentQuizQuestions.length) *
+                100
+              }%`,
+            }"
           ></div>
         </div>
       </div>
 
-      <!-- Question Display -->
+      <!-- Question -->
       <div
         v-if="currentQuestion && !quizCompleted"
         class="bg-gray-800 rounded-lg shadow-lg p-6"
@@ -164,21 +200,13 @@
 
           <div class="bg-gray-700 rounded-lg p-6 mb-6">
             <div class="text-4xl font-bold text-blue-400 mb-2">
-              {{ quizzesStore.currentQuizScore }}/{{ quizzesStore.currentQuizQuestions.length }}
+              {{ quizzesStore.currentQuizScore }}/{{
+                quizzesStore.currentQuizQuestions.length
+              }}
             </div>
             <div class="text-gray-300">{{ getScorePercentage() }}% Correct</div>
-            
-            <!-- Best Score Comparison -->
-            <div v-if="userProfileStore.isLoggedIn && getCurrentBestScore()" class="mt-4 pt-4 border-t border-gray-600">
-              <div class="text-sm text-gray-300">
-                <span class="font-medium">Your Best Score:</span> 
-                {{ getCurrentBestScore()?.score }}/{{ getCurrentBestScore()?.totalQuestions }}
-                ({{ Math.round(getCurrentBestScore()?.percentage || 0) }}%)
-              </div>
-              <div v-if="quizzesStore.currentQuizScore > (getCurrentBestScore()?.score || 0)" 
-                   class="text-sm text-green-400 mt-1">
-                <span class="font-medium">New Personal Best!</span> 🎉
-              </div>
+            <div v-if="userProfileStore.isLoggedIn && getCurrentBestScore()" class="text-sm text-blue-400 mt-2">
+              Previous Best: {{ getCurrentBestScore() }}
             </div>
           </div>
 
@@ -235,23 +263,53 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <div
+      v-if="showDeleteDialog"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="cancelDelete"
+    >
+      <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-white mb-4">Delete Quiz</h3>
+        <p class="text-gray-300 mb-6">
+          Are you sure you want to delete "{{ quizToDelete?.title }}"? This action cannot be undone.
+        </p>
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="cancelDelete"
+            class="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDelete"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useQuizzesStore } from '../stores/quizzes';
-import { useQuizScoresStore } from '../stores/quizScores';
 import { useUserProfileStore } from '../stores/userProfile';
+import { useQuizScoresStore } from '../stores/quizScores';
 
 const quizzesStore = useQuizzesStore();
-const quizScoresStore = useQuizScoresStore();
 const userProfileStore = useUserProfileStore();
+const quizScoresStore = useQuizScoresStore();
 
 const currentQuestionIndex = ref(0);
 const selectedAnswer = ref<number | null>(null);
 const quizCompleted = ref(false);
 const scoreCanvas = ref<HTMLCanvasElement | null>(null);
+const showDeleteDialog = ref(false);
+const quizToDelete = ref<any>(null);
 
 const currentQuestion = computed(() => {
   if (!quizzesStore.currentQuiz) return null;
@@ -259,30 +317,29 @@ const currentQuestion = computed(() => {
 });
 
 const isLastQuestion = computed(() => {
-  if (!quizzesStore.currentQuiz) return false;
   return (
-    currentQuestionIndex.value === quizzesStore.currentQuizQuestions.length - 1
+    currentQuestionIndex.value ===
+    quizzesStore.currentQuizQuestions.length - 1
   );
 });
 
 const getBestScoreForQuiz = (quizId: string) => {
-  const bestScore = quizScoresStore.getBestScoreForQuiz(quizId);
-  return bestScore ? `${bestScore.score}/${bestScore.totalQuestions} (${Math.round(bestScore.percentage)}%)` : 'No attempts';
+  return quizScoresStore.getBestScore(quizId);
 };
 
 const twitterShareUrl = computed(() => {
   if (!quizzesStore.currentQuiz) return '#';
-  
+
   const score = quizzesStore.currentQuizScore;
   const total = quizzesStore.currentQuizQuestions.length;
   const percentage = getScorePercentage();
   const quizTitle = quizzesStore.currentQuiz.title;
-  
+
   const message = `I scored ${score}/${total} (${percentage}%) on "${quizTitle}" in Quiz Insanity! Can you beat my score?`;
-  
+
   const encodedMessage = encodeURIComponent(message);
   const appUrl = encodeURIComponent(window.location.origin);
-  
+
   return `https://twitter.com/intent/tweet?text=${encodedMessage}&url=${appUrl}`;
 });
 
@@ -295,39 +352,46 @@ const startQuiz = (quizId: string) => {
 
 const selectAnswer = (answerIndex: number) => {
   selectedAnswer.value = answerIndex;
-  quizzesStore.submitAnswer(currentQuestionIndex.value, answerIndex);
 };
 
 const nextQuestion = () => {
+  if (selectedAnswer.value === null) return;
+
+  // Submit the answer
+  quizzesStore.submitAnswer(currentQuestionIndex.value, selectedAnswer.value);
+
   if (isLastQuestion.value) {
+    // Quiz completed
     quizCompleted.value = true;
-    // Save score when quiz is completed
-    if (quizzesStore.currentQuiz && quizzesStore.currentAttempt) {
-      quizScoresStore.addScore(
+
+    // Save score if user is logged in
+    if (userProfileStore.isLoggedIn && quizzesStore.currentQuiz) {
+      quizScoresStore.saveScore(
         quizzesStore.currentQuiz.id,
-        quizzesStore.currentQuiz.title,
         quizzesStore.currentQuizScore,
         quizzesStore.currentQuizQuestions.length
       );
     }
   } else {
+    // Move to next question
     currentQuestionIndex.value++;
-    selectedAnswer.value =
-      quizzesStore.currentAttempt?.answers[currentQuestionIndex.value] ?? null;
+    selectedAnswer.value = null;
   }
 };
 
 const previousQuestion = () => {
   if (currentQuestionIndex.value > 0) {
     currentQuestionIndex.value--;
-    selectedAnswer.value =
-      quizzesStore.currentAttempt?.answers[currentQuestionIndex.value] ?? null;
+    selectedAnswer.value = null;
   }
 };
 
 const restartQuiz = () => {
+  currentQuestionIndex.value = 0;
+  selectedAnswer.value = null;
+  quizCompleted.value = false;
   if (quizzesStore.currentQuiz) {
-    startQuiz(quizzesStore.currentQuiz.id);
+    quizzesStore.startQuizAttempt(quizzesStore.currentQuiz.id);
   }
 };
 
@@ -341,7 +405,8 @@ const editQuiz = (quizId: string) => {
 const getScorePercentage = () => {
   if (!quizzesStore.currentQuiz) return 0;
   return Math.round(
-    (quizzesStore.currentQuizScore / quizzesStore.currentQuizQuestions.length) *
+    (quizzesStore.currentQuizScore /
+      quizzesStore.currentQuizQuestions.length) *
       100
   );
 };
@@ -352,7 +417,23 @@ const formatDate = (date: Date) => {
 
 const getCurrentBestScore = () => {
   if (!quizzesStore.currentQuiz) return null;
-  return quizScoresStore.getBestScoreForQuiz(quizzesStore.currentQuiz.id);
+  return getBestScoreForQuiz(quizzesStore.currentQuiz.id);
+};
+
+const showDeleteConfirmation = (quiz: any) => {
+  quizToDelete.value = quiz;
+  showDeleteDialog.value = true;
+};
+
+const cancelDelete = () => {
+  quizToDelete.value = null;
+  showDeleteDialog.value = false;
+};
+
+const confirmDelete = () => {
+  quizzesStore.removeQuiz(quizToDelete.value.id);
+  quizToDelete.value = null;
+  showDeleteDialog.value = false;
 };
 
 onMounted(() => {
