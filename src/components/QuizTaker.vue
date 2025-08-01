@@ -11,13 +11,28 @@
         <p class="text-gray-400 mb-4">No quizzes available yet.</p>
         <router-link
           to="/create"
-          class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+          class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 mr-2"
         >
           Create Your First Quiz
         </router-link>
+        <router-link
+          to="/quiz/create"
+          class="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+        >
+          Add New Quiz Manually
+        </router-link>
       </div>
 
-      <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div class="mb-4 flex justify-between items-center">
+        <h3 class="text-lg font-medium text-white">Available Quizzes</h3>
+        <router-link
+          to="/quiz/create"
+          class="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+        >
+          Add New Quiz Manually
+        </router-link>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="quiz in quizzesStore.quizzes"
           :key="quiz.id"
@@ -32,8 +47,16 @@
             <span>{{ quiz.questions.length }} questions</span>
             <span>{{ formatDate(quiz.createdAt) }}</span>
           </div>
-          <div v-if="userProfileStore.isLoggedIn" class="text-xs bg-gray-800 rounded p-2 text-blue-400">
-            <span class="font-medium">Best Score:</span> {{ getBestScoreForQuiz(quiz.id) }}
+          <div class="flex justify-between items-center mt-2">
+            <div v-if="userProfileStore.isLoggedIn" class="text-xs bg-gray-800 rounded p-2 text-blue-400">
+              <span class="font-medium">Best Score:</span> {{ getBestScoreForQuiz(quiz.id) }}
+            </div>
+            <button
+              @click.stop="editQuiz(quiz.id)"
+              class="text-xs bg-blue-600 hover:bg-blue-700 text-white rounded p-2 transition-colors"
+            >
+              Edit
+            </button>
           </div>
         </div>
       </div>
@@ -246,6 +269,13 @@ const restartQuiz = () => {
   if (quizzesStore.currentQuiz) {
     startQuiz(quizzesStore.currentQuiz.id);
   }
+};
+
+const editQuiz = (quizId: string) => {
+  // Prevent the parent div click event from firing
+  event?.stopPropagation();
+  // Navigate to the edit page with the quiz ID
+  window.location.href = `/quiz/edit/${quizId}`;
 };
 
 const getScorePercentage = () => {
