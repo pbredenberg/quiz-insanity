@@ -101,7 +101,7 @@ export const handler: Handler = async (event) => {
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
       maxRedirects: 3, // Limit redirects
-      maxContentLength: 1024 * 1024, // 1MB limit
+      maxContentLength: 20 * 1024 * 1024, // 20MB limit
     });
 
     const html = response.data;
