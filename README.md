@@ -44,12 +44,12 @@ A Vue 3.5 + Vite web app that generates quiz questions from website URLs using O
 2. **Install and use the correct Node.js version**
 
    ```bash
-   # Install Node.js 18
-   nvm install 18
-   nvm use 18
+   # Install Node.js 22
+   nvm install 22
+   nvm use 22
 
    # Set as default (optional)
-   nvm alias default 18
+   nvm alias default 22
    ```
 
 3. **Clone the repository**
@@ -112,7 +112,7 @@ Set these environment variables in your Netlify dashboard:
 
 ### Project Structure
 
-```
+```dir
 quiz-insanity/
 ├── src/
 │   ├── components/          # Vue components
@@ -197,22 +197,6 @@ The app uses Netlify Functions for backend operations:
 - `POST /.netlify/functions/generate-quiz` - Generate quiz using OpenAI
 
 ## Troubleshooting
-
-### Node.js Version Issues
-
-If you encounter Node.js version issues:
-
-```bash
-# Check current Node.js version
-node --version
-
-# Use nvm to switch to the correct version
-nvm use 18
-
-# If you don't have Node.js 18 installed
-nvm install 18
-nvm use 18
-```
 
 ### Build Issues
 

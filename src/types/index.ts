@@ -3,6 +3,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  description?: string;  // New field with 250 char limit (optional)
+  interests?: string[];   // New field for storing user interests as tags
   preferences: {
     theme: 'dark' | 'light';
     notifications: boolean;
@@ -39,6 +41,18 @@ export interface QuizAttempt {
   completedAt: Date;
 }
 
+// Quiz Score History Types
+export interface QuizScore {
+  id: string;
+  userId: string;
+  quizId: string;
+  quizTitle: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  completedAt: Date;
+}
+
 // Store Types
 export interface UserProfileStore {
   profile: UserProfile | null;
@@ -50,6 +64,12 @@ export interface QuizzesStore {
   quizzes: Quiz[];
   currentQuiz: Quiz | null;
   currentAttempt: QuizAttempt | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface QuizScoresStore {
+  scoreHistory: QuizScore[];
   isLoading: boolean;
   error: string | null;
 }

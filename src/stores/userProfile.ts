@@ -12,12 +12,14 @@ export const useUserProfileStore = defineStore('userProfile', () => {
   const isLoggedIn = computed(() => profile.value !== null);
   const userName = computed(() => profile.value?.name || 'Guest');
   const userEmail = computed(() => profile.value?.email || '');
+  const userDescription = computed(() => profile.value?.description || '');
+  const userInterests = computed(() => profile.value?.interests || []);
   const userPreferences = computed(
     () => profile.value?.preferences || { theme: 'dark', notifications: true }
   );
 
   // Actions
-  const createProfile = (name: string, email: string) => {
+  const createProfile = (name: string, email: string, description?: string, interests?: string[]) => {
     isLoading.value = true;
     error.value = null;
 
@@ -26,6 +28,8 @@ export const useUserProfileStore = defineStore('userProfile', () => {
         id: crypto.randomUUID(),
         name,
         email,
+        description,
+        interests,
         preferences: {
           theme: 'dark',
           notifications: true,
@@ -94,6 +98,8 @@ export const useUserProfileStore = defineStore('userProfile', () => {
     isLoggedIn,
     userName,
     userEmail,
+    userDescription,
+    userInterests,
     userPreferences,
 
     // Actions
