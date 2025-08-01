@@ -87,7 +87,11 @@
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <span v-if="quizzesStore.isLoading">Generating Quiz...</span>
+          <span v-if="quizzesStore.isLoading">{{
+            currentStep === 'parsing'
+              ? 'Parsing Website...'
+              : 'Generating Quiz...'
+          }}</span>
           <span v-else>Generate Quiz</span>
         </button>
       </form>
@@ -119,9 +123,19 @@
             ></path>
           </svg>
           <div>
-            <h3 class="text-blue-400 font-medium">Generating Quiz</h3>
+            <h3 class="text-blue-400 font-medium">
+              {{
+                currentStep === 'parsing'
+                  ? 'Parsing Website'
+                  : 'Generating Quiz'
+              }}
+            </h3>
             <p class="text-blue-300 text-sm">
-              Analyzing website content and creating questions...
+              {{
+                currentStep === 'parsing'
+                  ? 'Analyzing website content...'
+                  : 'Creating questions with AI...'
+              }}
             </p>
           </div>
         </div>
@@ -161,6 +175,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useQuizzesStore } from '../stores/quizzes';
+import { ApiService } from '../services/api';
 import type { Quiz } from '../types';
 
 const quizzesStore = useQuizzesStore();
@@ -172,40 +187,46 @@ const form = ref({
 });
 
 const showSuccess = ref(false);
+const currentStep = ref<'parsing' | 'generating'>('parsing');
 
 const handleSubmit = async () => {
   if (!form.value.url || !form.value.title) return;
 
   try {
-    // For now, we'll create a mock quiz since we don't have the backend yet
-    const mockQuiz: Quiz = {
-      id: crypto.randomUUID(),
-      title: form.value.title,
-      description:
-        form.value.description || 'Quiz generated from website content',
+    quizzesStore.setLoading(true);
+    currentStep.value = 'parsing';
+    quizzesStore.clearError();
+
+    // Step 1: Parse the website
+    const parseResult = await ApiService.parseWebsite(form.value.url);
+
+    if (!parseResult.success) {
+      quizzesStore.error = parseResult.error || 'Failed to parse website';
+      return;
+    }
+
+    // Step 2: Generate quiz from the content
+    currentStep.value = 'generating';
+
+    const generateResult = await ApiService.generateQuiz(
+      parseResult.content!,
+      parseResult.title!,
+      form.value.title,
+      form.value.description
+    );
+
+    if (!generateResult.success) {
+      quizzesStore.error = generateResult.error || 'Failed to generate quiz';
+      return;
+    }
+
+    // Add the quiz to the store
+    const quiz: Quiz = {
+      ...generateResult.quiz,
       sourceUrl: form.value.url,
-      questions: [
-        {
-          id: crypto.randomUUID(),
-          question: 'This is a sample question from the website content?',
-          options: ['Option A', 'Option B', 'Option C', 'Option D'],
-          correctAnswer: 0,
-          explanation:
-            'This is the correct answer based on the website content.',
-        },
-        {
-          id: crypto.randomUUID(),
-          question: 'Another sample question about the website?',
-          options: ['Yes', 'No', 'Maybe', 'Not sure'],
-          correctAnswer: 1,
-          explanation: 'This is the correct answer.',
-        },
-      ],
-      createdAt: new Date(),
-      updatedAt: new Date(),
     };
 
-    quizzesStore.addQuiz(mockQuiz);
+    quizzesStore.addQuiz(quiz);
     showSuccess.value = true;
 
     // Reset form
@@ -221,6 +242,9 @@ const handleSubmit = async () => {
     }, 3000);
   } catch (error) {
     console.error('Error creating quiz:', error);
+    quizzesStore.error = 'An unexpected error occurred. Please try again.';
+  } finally {
+    quizzesStore.setLoading(false);
   }
 };
 </script>
