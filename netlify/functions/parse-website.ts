@@ -15,7 +15,6 @@ interface ParseWebsiteResponse {
 
 // List of domains that are known to be problematic or slow
 const PROBLEMATIC_DOMAINS = [
-  'jw.org',
   'wikipedia.org',
   'github.com',
   'stackoverflow.com',
