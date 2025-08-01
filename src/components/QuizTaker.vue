@@ -198,8 +198,6 @@ const isLastQuestion = computed(() => {
   );
 });
 
-const isLoggedIn = computed(() => userProfileStore.isLoggedIn);
-
 const getBestScoreForQuiz = (quizId: string) => {
   const bestScore = quizScoresStore.getBestScoreForQuiz(quizId);
   return bestScore ? `${bestScore.score}/${bestScore.totalQuestions} (${Math.round(bestScore.percentage)}%)` : 'No attempts';
