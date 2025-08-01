@@ -48,7 +48,16 @@
         </router-link>
       </div>
 
-      <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Export All Button -->
+        <div class="bg-gray-700 rounded-lg p-4 mb-4">
+          <button 
+            @click="exportAllQuizzes"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+          >
+            Export All Quizzes
+          </button>
+        </div>
         <div
           v-for="quiz in quizzesStore.quizzes"
           :key="quiz.id"

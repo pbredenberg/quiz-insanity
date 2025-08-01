@@ -36,6 +36,13 @@
             >
               My Quizzes
             </router-link>
+            <router-link
+              to="/import"
+              class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              active-class="text-white bg-gray-700"
+            >
+              Import Quiz
+            </router-link>
           </nav>
         </div>
       </div>

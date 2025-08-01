@@ -3,6 +3,7 @@ import HomePage from '../components/HomePage.vue';
 import UserProfileForm from '../components/UserProfileForm.vue';
 import QuizCreator from '../components/QuizCreator.vue';
 import QuizTaker from '../components/QuizTaker.vue';
+import QuizImport from '../components/QuizImport.vue';
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/quizzes',
     name: 'TakeQuiz',
     component: QuizTaker,
+  },
+  {
+    path: '/import',
+    name: 'ImportQuiz',
+    component: QuizImport,
   },
 ];
 
