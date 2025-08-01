@@ -1,9 +1,8 @@
 <template>
   <div class="max-w-2xl mx-auto">
     <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-      <h2 class="text-2xl font-bold text-white mb-6">Create New Quiz</h2>
-
-      <form @submit.prevent="handleSubmit" class="space-y-6">
+      <h2 class="text-2xl font-bold text-white mb-4">Create Quiz</h2>
+        <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
           <label for="url" class="block text-sm font-medium text-gray-300 mb-2">
             Website URL
@@ -87,7 +86,7 @@
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <span v-if="quizzesStore.isLoading">{{
+          <span v-if="quizzesStore.isLoading">{{ 
             currentStep === 'parsing'
               ? 'Fetching Website...'
               : 'Generating Quiz...'

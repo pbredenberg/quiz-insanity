@@ -17,6 +17,18 @@ export interface GenerateQuizResponse {
   error?: string;
 }
 
+export interface ExportQuizResponse {
+  success: boolean;
+  data?: string;
+  error?: string;
+}
+
+export interface ImportQuizResponse {
+  success: boolean;
+  quiz?: any;
+  error?: string;
+}
+
 export class ApiService {
   static async parseWebsite(url: string): Promise<ParseWebsiteResponse> {
     try {
@@ -163,6 +175,98 @@ export class ApiService {
       return {
         success: false,
         error: 'Failed to generate quiz. Please try again.',
+      };
+    }
+  }
+  
+  static async exportQuiz(quiz: any, format: string = 'json', filename?: string): Promise<Blob> {
+    try {
+      const response = await fetch(`${API_BASE}/export-quiz`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quiz,
+          format,
+          filename,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Return the blob directly for download
+      return await response.blob();
+    } catch (error) {
+      console.error('Error exporting quiz:', error);
+      throw new Error('Failed to export quiz. Please try again.');
+    }
+  }
+  
+  static async importQuiz(quizData: string): Promise<ImportQuizResponse> {
+    try {
+      const response = await fetch(`${API_BASE}/import-quiz`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quizData,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error importing quiz:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to import quiz. Please try again.',
+      };
+    }
+  }
+  
+  /**
+   * Client-side validation and import of quiz data
+   * This allows importing without making a server call
+   */
+  static validateAndImportQuiz(quizData: string): { success: boolean; quiz?: any; error?: string } {
+    try {
+      // Parse the quiz data
+      const quiz = JSON.parse(quizData);
+      
+      // Basic validation
+      if (!quiz || typeof quiz !== 'object') {
+        return { success: false, error: 'Invalid quiz format' };
+      }
+      
+      if (!quiz.title || typeof quiz.title !== 'string') {
+        return { success: false, error: 'Quiz must have a title' };
+      }
+      
+      if (!Array.isArray(quiz.questions) || quiz.questions.length === 0) {
+        return { success: false, error: 'Quiz must have at least one question' };
+      }
+      
+      // Generate a new ID to prevent duplicates
+      const importedQuiz = {
+        ...quiz,
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
+        createdAt: quiz.createdAt ? new Date(quiz.createdAt) : new Date(),
+      };
+      
+      return { success: true, quiz: importedQuiz };
+    } catch (error) {
+      console.error('Error validating quiz data:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Invalid quiz data format'
       };
     }
   }
