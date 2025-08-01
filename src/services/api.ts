@@ -179,7 +179,7 @@ export class ApiService {
     }
   }
   
-  static async exportQuiz(quiz: any, format: string = 'json', filename?: string): Promise<Blob> {
+  static async exportQuiz(quiz: any, format: string = 'json', filename?: string): Promise<void> {
     try {
       const response = await fetch(`${API_BASE}/export-quiz`, {
         method: 'POST',
@@ -197,11 +197,27 @@ export class ApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Return the blob directly for download
-      return await response.blob();
+      // Get the raw JSON data
+      const data = await response.text();
+      if (!data) {
+        throw new Error('No quiz data received');
+      }
+
+      // Create a Blob from the JSON data
+      const blob = new Blob([data], { type: 'application/json' });
+      
+      // Create a temporary link to trigger download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || `quiz_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting quiz:', error);
-      throw new Error('Failed to export quiz. Please try again.');
+      throw error instanceof Error ? error : new Error('Failed to export quiz. Please try again.');
     }
   }
   

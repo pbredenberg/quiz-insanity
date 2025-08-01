@@ -263,11 +263,12 @@
 import { ref, computed, onMounted } from 'vue';
 import { useQuizzesStore } from '../stores/quizzes';
 import { ApiService } from '../services/api';
+import type { Quiz } from '../types';
 
 // For export feedback
 const exportLoading = ref(false);
 const exportError = ref('');
-const exportSuccess = ref(false);
+const exportSuccess = ref('');
 
 const quizzesStore = useQuizzesStore();
 
@@ -343,34 +344,21 @@ const exportQuiz = async (quiz: any) => {
     exportLoading.value = true;
     exportError.value = '';
     exportSuccess.value = false;
-    
-    // Generate a filename based on the quiz title
+
+    // Generate a filename with timestamp
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `${quiz.title.replace(/\s+/g, '-')}-${timestamp}.json`;
+    const filename = `quiz-${quiz.title.replace(/[^a-z0-9]/gi, '-')}-${timestamp}.json`;
+
+    // Export using API service
+    await ApiService.exportQuiz(quiz, 'json', filename);
     
-    // Call the API service to export the quiz
-    const blob = await ApiService.exportQuiz(quiz, 'json', filename);
-    
-    // Create a download link and trigger the download
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    
-    // Clean up
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
-    exportSuccess.value = true;
+    exportSuccess.value = 'Quiz exported successfully';
     setTimeout(() => {
-      exportSuccess.value = false;
+      exportSuccess.value = '';
     }, 3000);
-  } catch (error) {
-    console.error('Error exporting quiz:', error);
-    exportError.value = error instanceof Error ? error.message : 'Failed to export quiz';
+  } catch (err) {
+    console.error('Error exporting quiz:', err);
+    exportError.value = err instanceof Error ? err.message : 'Failed to export quiz. Please try again.';
     setTimeout(() => {
       exportError.value = '';
     }, 5000);
@@ -388,6 +376,62 @@ const exportCurrentQuiz = async () => {
 };
 
 /**
+ * Export all quizzes as a JSON file
+ */
+const exportAllQuizzes = async () => {
+  try {
+    exportLoading.value = true;
+    exportError.value = '';
+    exportSuccess.value = false;
+
+    const allQuizzes = quizzesStore.quizzes;
+    if (allQuizzes.length === 0) {
+      exportError.value = 'No quizzes to export';
+      return;
+    }
+
+    // Generate a timestamp for consistent naming
+    const timestamp = new Date().toISOString().split('T')[0];
+    const totalQuizzes = allQuizzes.length;
+    let successfulExports = 0;
+
+    // Export each quiz sequentially with progress tracking
+    for (const quiz of allQuizzes) {
+      try {
+        // Generate filename for this quiz
+        const safeTitle = quiz.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const filename = `quiz_${safeTitle}_${timestamp}.json`;
+
+        // Export this quiz
+        await ApiService.exportQuiz(quiz, 'json', filename);
+        successfulExports++;
+
+        // Update progress message
+        exportSuccess.value = `Exported ${successfulExports} of ${totalQuizzes} quizzes`;
+      } catch (err) {
+        console.error(`Error exporting quiz ${quiz.title}:`, err);
+        exportError.value = `Failed to export quiz: ${err instanceof Error ? err.message : 'Unknown error'}`;
+        break; // Stop on first error
+      }
+    }
+
+    // Final success message if all quizzes were exported
+    if (successfulExports === totalQuizzes) {
+      exportSuccess.value = `Exported ${successfulExports} of ${totalQuizzes} quizzes`;
+    }
+  } catch (err) {
+    console.error('Error exporting quizzes:', err);
+    exportError.value = 'Failed to export quizzes. Please try again.';
+  } finally {
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      exportSuccess.value = '';
+    }, 5000);
+    exportLoading.value = false;
+  }
+};
+
+/**
  * Clear export notification
  */
 const clearExportNotification = () => {
@@ -400,5 +444,8 @@ onMounted(() => {
   currentQuestionIndex.value = 0;
   selectedAnswer.value = null;
   quizCompleted.value = false;
+  exportError.value = '';
+  exportSuccess.value = false;
+  exportLoading.value = false;
 });
 </script>
