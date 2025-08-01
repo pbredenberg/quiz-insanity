@@ -28,9 +28,12 @@
             {{ quiz.title }}
           </h3>
           <p class="text-gray-300 text-sm mb-3">{{ quiz.description }}</p>
-          <div class="flex justify-between items-center text-xs text-gray-400">
+          <div class="flex justify-between items-center text-xs text-gray-400 mb-2">
             <span>{{ quiz.questions.length }} questions</span>
             <span>{{ formatDate(quiz.createdAt) }}</span>
+          </div>
+          <div v-if="userProfileStore.isLoggedIn" class="text-xs bg-gray-800 rounded p-2 text-blue-400">
+            <span class="font-medium">Best Score:</span> {{ getBestScoreForQuiz(quiz.id) }}
           </div>
         </div>
       </div>
@@ -131,11 +134,22 @@
 
           <div class="bg-gray-700 rounded-lg p-6 mb-6">
             <div class="text-4xl font-bold text-blue-400 mb-2">
-              {{ quizzesStore.currentQuizScore }}/{{
-                quizzesStore.currentQuizQuestions.length
-              }}
+              {{ quizzesStore.currentQuizScore }}/{{ quizzesStore.currentQuizQuestions.length }}
             </div>
             <div class="text-gray-300">{{ getScorePercentage() }}% Correct</div>
+            
+            <!-- Best Score Comparison -->
+            <div v-if="userProfileStore.isLoggedIn && getCurrentBestScore()" class="mt-4 pt-4 border-t border-gray-600">
+              <div class="text-sm text-gray-300">
+                <span class="font-medium">Your Best Score:</span> 
+                {{ getCurrentBestScore()?.score }}/{{ getCurrentBestScore()?.totalQuestions }}
+                ({{ Math.round(getCurrentBestScore()?.percentage || 0) }}%)
+              </div>
+              <div v-if="quizzesStore.currentQuizScore > (getCurrentBestScore()?.score || 0)" 
+                   class="text-sm text-green-400 mt-1">
+                <span class="font-medium">New Personal Best!</span> 🎉
+              </div>
+            </div>
           </div>
 
           <div class="space-y-4">
@@ -161,8 +175,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useQuizzesStore } from '../stores/quizzes';
+import { useQuizScoresStore } from '../stores/quizScores';
+import { useUserProfileStore } from '../stores/userProfile';
 
 const quizzesStore = useQuizzesStore();
+const quizScoresStore = useQuizScoresStore();
+const userProfileStore = useUserProfileStore();
 
 const currentQuestionIndex = ref(0);
 const selectedAnswer = ref<number | null>(null);
@@ -180,6 +198,11 @@ const isLastQuestion = computed(() => {
   );
 });
 
+const getBestScoreForQuiz = (quizId: string) => {
+  const bestScore = quizScoresStore.getBestScoreForQuiz(quizId);
+  return bestScore ? `${bestScore.score}/${bestScore.totalQuestions} (${Math.round(bestScore.percentage)}%)` : 'No attempts';
+};
+
 const startQuiz = (quizId: string) => {
   quizzesStore.startQuizAttempt(quizId);
   currentQuestionIndex.value = 0;
@@ -195,9 +218,19 @@ const selectAnswer = (answerIndex: number) => {
 const nextQuestion = () => {
   if (isLastQuestion.value) {
     quizCompleted.value = true;
+    // Save score when quiz is completed
+    if (quizzesStore.currentQuiz && quizzesStore.currentAttempt) {
+      quizScoresStore.addScore(
+        quizzesStore.currentQuiz.id,
+        quizzesStore.currentQuiz.title,
+        quizzesStore.currentQuizScore,
+        quizzesStore.currentQuizQuestions.length
+      );
+    }
   } else {
     currentQuestionIndex.value++;
-    selectedAnswer.value = null;
+    selectedAnswer.value =
+      quizzesStore.currentAttempt?.answers[currentQuestionIndex.value] ?? null;
   }
 };
 
@@ -225,6 +258,11 @@ const getScorePercentage = () => {
 
 const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString();
+};
+
+const getCurrentBestScore = () => {
+  if (!quizzesStore.currentQuiz) return null;
+  return quizScoresStore.getBestScoreForQuiz(quizzesStore.currentQuiz.id);
 };
 
 onMounted(() => {

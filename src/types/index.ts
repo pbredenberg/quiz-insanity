@@ -39,6 +39,18 @@ export interface QuizAttempt {
   completedAt: Date;
 }
 
+// Quiz Score History Types
+export interface QuizScore {
+  id: string;
+  userId: string;
+  quizId: string;
+  quizTitle: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  completedAt: Date;
+}
+
 // Store Types
 export interface UserProfileStore {
   profile: UserProfile | null;
@@ -50,6 +62,12 @@ export interface QuizzesStore {
   quizzes: Quiz[];
   currentQuiz: Quiz | null;
   currentAttempt: QuizAttempt | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface QuizScoresStore {
+  scoreHistory: QuizScore[];
   isLoading: boolean;
   error: string | null;
 }
