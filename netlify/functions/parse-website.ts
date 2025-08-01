@@ -93,38 +93,60 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Fetch website content with reduced timeout for production
+    // Performance optimizations for production
+    const startTime = Date.now();
+
+    // Log request details
+    console.log(`Starting request to: ${url}`);
+    console.log(`Domain: ${parsedUrl.hostname}`);
+    console.log(`Protocol: ${parsedUrl.protocol}`);
+    console.log(`Path: ${parsedUrl.pathname}`);
+
+    // Fetch website content with optimized settings for production
     const response = await axios.get(url, {
-      timeout: 30000,
+      timeout: 15000, // 15 seconds - balanced for production
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        Connection: 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
       },
-      maxRedirects: 3, // Limit redirects
+      maxRedirects: 2, // Reduced redirects for speed
       maxContentLength: 20 * 1024 * 1024, // 20MB limit
+      decompress: true, // Handle gzip compression
     });
 
+    const fetchTime = Date.now() - startTime;
+    console.log(`Fetch time: ${fetchTime}ms`);
+
     const html = response.data;
+
+    // Optimize cheerio parsing
+    const parseStart = Date.now();
     const $ = cheerio.load(html);
 
-    // Extract title
+    // Extract title efficiently
     const title =
       $('title').text().trim() || $('h1').first().text().trim() || 'Untitled';
 
-    // Remove script and style elements
-    $('script').remove();
-    $('style').remove();
-    $('nav').remove();
-    $('header').remove();
-    $('footer').remove();
-    $('aside').remove();
+    // Remove elements more efficiently
+    $(
+      'script, style, nav, header, footer, aside, .ad, .advertisement, .sidebar'
+    ).remove();
 
-    // Extract text content with smaller limit
+    // Extract text content with optimized processing
     const textContent = $('body')
       .text()
       .replace(/\s+/g, ' ')
       .trim()
-      .substring(0, 4000); // Reduced from 8000 to 4000 characters
+      .substring(0, 4000);
+
+    const parseTime = Date.now() - parseStart;
+    console.log(`Parse time: ${parseTime}ms`);
 
     if (!textContent) {
       return {
@@ -136,6 +158,9 @@ export const handler: Handler = async (event) => {
         }),
       };
     }
+
+    const totalTime = Date.now() - startTime;
+    console.log(`Total processing time: ${totalTime}ms`);
 
     const result: ParseWebsiteResponse = {
       success: true,
