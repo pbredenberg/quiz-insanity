@@ -176,9 +176,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useQuizzesStore } from '../stores/quizzes';
 import { useUserProfileStore } from '../stores/userProfile';
 
+const router = useRouter();
 const quizzesStore = useQuizzesStore();
 const userProfileStore = useUserProfileStore();
 
@@ -193,6 +195,7 @@ const recentQuizzes = computed(() => {
 
 const startQuiz = (quizId: string) => {
   quizzesStore.startQuizAttempt(quizId);
+  router.push('/quizzes');
 };
 
 const formatDate = (date: Date) => {
