@@ -7,6 +7,7 @@
     "dev": "run-p dev:*",
     "dev:vite": "vite",
     "dev:netlify": "netlify dev",
+    "prebuild": "npm rebuild",
     "build": "vue-tsc -b && vite build",
     "build:functions": "tsc -p tsconfig.functions.json",
     "preview": "vite preview"
