@@ -97,7 +97,7 @@ export const handler: Handler = async (event) => {
     const prompt = `Based on the following website content, generate a quiz with 5 multiple choice questions. Each question should have 4 options (A, B, C, D) and only one correct answer.
 
 Website Title: ${title}
-Website Content: ${content.substring(0, 6000)}
+Website Content: ${content.substring(0, 3000)}
 
 Please generate a JSON response in the following format:
 {

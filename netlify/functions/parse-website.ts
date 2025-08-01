@@ -13,6 +13,17 @@ interface ParseWebsiteResponse {
   error?: string;
 }
 
+// List of domains that are known to be problematic or slow
+const PROBLEMATIC_DOMAINS = [
+  'jw.org',
+  'wikipedia.org',
+  'github.com',
+  'stackoverflow.com',
+  'reddit.com',
+  'medium.com',
+  'dev.to',
+];
+
 export const handler: Handler = async (event) => {
   // Enable CORS
   const headers = {
@@ -54,8 +65,9 @@ export const handler: Handler = async (event) => {
     }
 
     // Validate URL
+    let parsedUrl;
     try {
-      new URL(url);
+      parsedUrl = new URL(url);
     } catch {
       return {
         statusCode: 400,
@@ -64,12 +76,32 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Fetch website content
+    // Check if domain is problematic
+    const domain = parsedUrl.hostname.toLowerCase();
+    const isProblematic = PROBLEMATIC_DOMAINS.some((problematic) =>
+      domain.includes(problematic)
+    );
+
+    if (isProblematic) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error:
+            'This website may be too slow or complex to parse. Please try a different website.',
+        }),
+      };
+    }
+
+    // Fetch website content with reduced timeout for production
     const response = await axios.get(url, {
-      timeout: 10000,
+      timeout: 25000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; QuizInsanity/1.0)',
       },
+      maxRedirects: 3, // Limit redirects
+      maxContentLength: 1024 * 1024, // 1MB limit
     });
 
     const html = response.data;
@@ -87,12 +119,12 @@ export const handler: Handler = async (event) => {
     $('footer').remove();
     $('aside').remove();
 
-    // Extract text content
+    // Extract text content with smaller limit
     const textContent = $('body')
       .text()
       .replace(/\s+/g, ' ')
       .trim()
-      .substring(0, 8000); // Limit content length
+      .substring(0, 4000); // Reduced from 8000 to 4000 characters
 
     if (!textContent) {
       return {
@@ -116,15 +148,33 @@ export const handler: Handler = async (event) => {
       headers,
       body: JSON.stringify(result),
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error parsing website:', error);
+
+    // Handle specific error types
+    let errorMessage =
+      'Failed to parse website. Please check the URL and try again.';
+
+    if (error.code === 'ECONNABORTED') {
+      errorMessage =
+        'Request timed out. The website may be slow or unavailable.';
+    } else if (error.response?.status === 403) {
+      errorMessage =
+        'Access denied. This website may block automated requests.';
+    } else if (error.response?.status === 404) {
+      errorMessage = 'Website not found. Please check the URL.';
+    } else if (error.code === 'ENOTFOUND') {
+      errorMessage = 'Website not found. Please check the URL.';
+    } else if (error.code === 'ECONNREFUSED') {
+      errorMessage = 'Connection refused. The website may be down.';
+    }
 
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         success: false,
-        error: 'Failed to parse website. Please check the URL and try again.',
+        error: errorMessage,
       }),
     };
   }
