@@ -37,16 +37,16 @@ A Vue 3.5 + Vite web app that generates quiz questions from website URLs using O
 
 ## Phase 3: Core UI Components
 
-- [ ] 1. Create main layout with dark theme
-- [ ] 2. Build user profile form component
-- [ ] 3. Create quiz creation interface
-  - [ ] URL input form
-  - [ ] Quiz generation status/loading
-- [ ] 4. Build quiz taking interface
-  - [ ] Question display
-  - [ ] Answer selection
-  - [ ] Results display
-- [ ] 5. Create navigation between sections
+- [x] 1. Create main layout with dark theme
+- [x] 2. Build user profile form component
+- [x] 3. Create quiz creation interface
+  - [x] URL input form
+  - [x] Quiz generation status/loading
+- [x] 4. Build quiz taking interface
+  - [x] Question display
+  - [x] Answer selection
+  - [x] Results display
+- [x] 5. Create navigation between sections
 
 ## Phase 4: Quiz Generation & Backend
 
@@ -65,4 +65,4 @@ A Vue 3.5 + Vite web app that generates quiz questions from website URLs using O
 - [ ] 4. Test localStorage persistence
 - [ ] 5. Final UI polish and cleanup
 
-## Current Status: Phase 1 & 2 completed ✅ - Ready to begin Phase 3
+## Current Status: Phase 1, 2 & 3 completed ✅ - Ready to begin Phase 4
