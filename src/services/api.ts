@@ -20,19 +20,9 @@ export interface GenerateQuizResponse {
 export class ApiService {
   static async parseWebsite(url: string): Promise<ParseWebsiteResponse> {
     try {
-      const response = await fetch(`${API_BASE}/parse-website`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      // Use client-side proxy as primary method
+      const { WebsiteProxyService } = await import('./websiteProxy');
+      return await WebsiteProxyService.fetchWebsite(url);
     } catch (error) {
       console.error('Error parsing website:', error);
       return {

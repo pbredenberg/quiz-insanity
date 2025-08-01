@@ -89,7 +89,7 @@
           </svg>
           <span v-if="quizzesStore.isLoading">{{
             currentStep === 'parsing'
-              ? 'Parsing Website...'
+              ? 'Fetching Website...'
               : 'Generating Quiz...'
           }}</span>
           <span v-else>Generate Quiz</span>
@@ -126,14 +126,14 @@
             <h3 class="text-blue-400 font-medium">
               {{
                 currentStep === 'parsing'
-                  ? 'Parsing Website'
+                  ? 'Fetching Website'
                   : 'Generating Quiz'
               }}
             </h3>
             <p class="text-blue-300 text-sm">
               {{
                 currentStep === 'parsing'
-                  ? 'Analyzing website content...'
+                  ? 'Downloading and analyzing website content...'
                   : 'Creating questions with AI...'
               }}
             </p>
