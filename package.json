@@ -35,6 +35,9 @@
     "vue-tsc": "^2.2.12"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.6.1"
+    "@esbuild/darwin-arm64": "0.20.1",
+    "@esbuild/darwin-x64": "0.20.1",
+    "@esbuild/linux-x64": "0.20.1",
+    "@rollup/rollup-linux-x64-gnu": "^4.6.1"
   }
 }
